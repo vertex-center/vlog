@@ -30,9 +30,9 @@ func main() {
 	log := vlog.New(
 		// Stdout and stderr.
 		vlog.WithOutputStd(),
-        // Text file.
+		// Text file.
 		vlog.WithOutputFile("logs", vlog.LogFormatText),
-        // JSON file.
+		// JSON file.
 		vlog.WithOutputFile("logs", vlog.LogFormatJson),
 	)
 
