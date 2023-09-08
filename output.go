@@ -19,6 +19,8 @@ const (
 
 type Output interface {
 	print(line *Line)
+	open() error
+	close() error
 }
 
 func WithOutputStd() func(l *Logger) {
@@ -34,7 +36,7 @@ func WithOutputFile(dir string, format LogFormat) func(l *Logger) {
 			output := &OutputTextFile{}
 			output.dir = dir
 			output.ext = ".txt"
-			err := output.Open()
+			err := output.open()
 			if err != nil {
 				_, _ = fmt.Fprintf(os.Stderr, "failed to open log file: %v\n", err)
 				return
@@ -44,7 +46,7 @@ func WithOutputFile(dir string, format LogFormat) func(l *Logger) {
 			output := &OutputJsonFile{}
 			output.dir = dir
 			output.ext = ".jsonl"
-			err := output.Open()
+			err := output.open()
 			if err != nil {
 				_, _ = fmt.Fprintf(os.Stderr, "failed to open log file: %v\n", err)
 				return
@@ -60,7 +62,7 @@ type OutputFile struct {
 	file *os.File
 }
 
-func (out *OutputFile) Open() error {
+func (out *OutputFile) open() error {
 	err := os.Mkdir(out.dir, os.ModePerm)
 	if err != nil && !os.IsExist(err) {
 		return err
@@ -72,7 +74,7 @@ func (out *OutputFile) Open() error {
 	return err
 }
 
-func (out *OutputFile) Close() error {
+func (out *OutputFile) close() error {
 	return out.file.Close()
 }
 
@@ -143,4 +145,12 @@ func (o OutputStd) print(l *Line) {
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to write to log file: %v\n", err)
 	}
+}
+
+func (o OutputStd) open() error {
+	return nil
+}
+
+func (o OutputStd) close() error {
+	return nil
 }

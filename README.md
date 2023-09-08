@@ -35,7 +35,9 @@ func main() {
 		// JSON file.
 		vlog.WithOutputFile("logs", vlog.LogFormatJson),
 	)
+    defer log.Close()
 
+	log.Debug("message", vlog.String("name", "abc"))
 	log.Info("message", vlog.String("name", "abc"))
 	log.Warn("message", vlog.String("name", "abc"))
 	log.Error(errors.New("message"), vlog.String("name", "abc"))
