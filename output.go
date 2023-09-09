@@ -71,7 +71,7 @@ func (out *OutputFile) open() error {
 		return err
 	}
 
-	filename := fmt.Sprintf("vertex_logs_%s.%s", time.Now().Format(time.DateOnly), out.ext)
+	filename := fmt.Sprintf("vertex_logs_%s%s", time.Now().Format(time.DateOnly), out.ext)
 
 	out.file, err = os.OpenFile(path.Join(out.dir, filename), os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 	return err
