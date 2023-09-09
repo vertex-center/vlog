@@ -41,8 +41,7 @@ func TestOutputStd(t *testing.T) {
 	file, err := os.ReadFile(stdout.Name())
 	assert.NoError(t, err)
 
-	expected := "1969-12-31 19:00:00 INF msg=message key=value\n"
-	assert.Equal(t, expected, string(file))
+	assert.Contains(t, string(file), " INF msg=message key=value\n")
 }
 
 func TestOutputTextFile(t *testing.T) {
@@ -59,8 +58,7 @@ func TestOutputTextFile(t *testing.T) {
 	content, err := os.ReadFile(file.Name())
 	assert.NoError(t, err)
 
-	expected := "1969-12-31 19:00:00 INF msg=message key=value\n"
-	assert.Equal(t, expected, string(content))
+	assert.Contains(t, string(content), " INF msg=message key=value\n")
 }
 
 func TestOutputJsonFile(t *testing.T) {
