@@ -25,7 +25,10 @@ type Output interface {
 
 func WithOutputStd() func(l *Logger) {
 	return func(l *Logger) {
-		*l.outputs = append(*l.outputs, OutputStd{})
+		*l.outputs = append(*l.outputs, OutputStd{
+			stdout: os.Stdout,
+			stderr: os.Stderr,
+		})
 	}
 }
 
@@ -110,7 +113,7 @@ type OutputTextFile struct {
 }
 
 func (o *OutputTextFile) print(l *Line) {
-	msg := fmt.Sprintf("%s %s %s", l.now.Format(time.DateTime), l.tag, l.msg)
+	msg := fmt.Sprintf("%s %s msg=%s", l.now.Format(time.DateTime), l.tag, l.msg)
 	for _, field := range l.fields {
 		msg += fmt.Sprintf(" %s=%s", field.Key, field.Value)
 	}
@@ -120,14 +123,17 @@ func (o *OutputTextFile) print(l *Line) {
 	}
 }
 
-type OutputStd struct{}
+type OutputStd struct {
+	stdout *os.File
+	stderr *os.File
+}
 
 func (o OutputStd) print(l *Line) {
 	var file *os.File
 	if l.tag == LogTagError {
-		file = os.Stderr
+		file = o.stderr
 	} else {
-		file = os.Stdout
+		file = o.stdout
 	}
 
 	msg := fmt.Sprintf("%s %s",
@@ -138,12 +144,12 @@ func (o OutputStd) print(l *Line) {
 	msg += fmt.Sprint(l.msg)
 	for _, field := range l.fields {
 		msg += color.New(l.color).Sprintf(" %s=", field.Key)
-		msg += fmt.Sprint(field.Key)
+		msg += fmt.Sprint(field.Value)
 	}
 
 	_, err := fmt.Fprintln(file, msg)
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to write to log file: %v\n", err)
+		_, _ = fmt.Fprintf(file, "failed to write to log file: %v\n", err)
 	}
 }
 
