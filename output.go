@@ -66,7 +66,7 @@ type OutputFile struct {
 }
 
 func (out *OutputFile) open() error {
-	err := os.Mkdir(out.dir, os.ModePerm)
+	err := os.MkdirAll(out.dir, os.ModePerm)
 	if err != nil && !os.IsExist(err) {
 		return err
 	}
