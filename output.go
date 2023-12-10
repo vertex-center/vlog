@@ -1,13 +1,10 @@
 package vlog
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path"
 	"time"
-
-	"github.com/fatih/color"
 )
 
 type LogFormat int
@@ -86,23 +83,13 @@ type OutputJsonFile struct {
 }
 
 func (o *OutputJsonFile) print(l *Line) {
-	m := map[string]any{
-		"seconds":     l.now.Unix(),
-		"nanoseconds": l.now.UnixNano(),
-		"kind":        l.tag,
-		"msg":         l.msg,
-	}
-	for _, field := range l.fields {
-		m[field.Key] = field.Value
-	}
-
-	j, err := json.Marshal(m)
+	j, err := l.ToJson()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to marshal json: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%v", err)
 		return
 	}
 
-	_, err = fmt.Fprintln(o.file, string(j))
+	_, err = fmt.Fprintln(o.file, j)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to write to log file: %v\n", err)
 	}
@@ -113,11 +100,7 @@ type OutputTextFile struct {
 }
 
 func (o *OutputTextFile) print(l *Line) {
-	msg := fmt.Sprintf("%s %s msg=%s", l.now.Format(time.DateTime), l.tag, l.msg)
-	for _, field := range l.fields {
-		msg += fmt.Sprintf(" %s=%s", field.Key, field.Value)
-	}
-	_, err := fmt.Fprintln(o.file, msg)
+	_, err := fmt.Fprintln(o.file, l.ToText())
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to write to log file: %v\n", err)
 	}
@@ -136,18 +119,7 @@ func (o OutputStd) print(l *Line) {
 		file = o.stdout
 	}
 
-	msg := fmt.Sprintf("%s %s",
-		color.New(color.FgHiWhite).Sprintf(l.now.Format(time.DateTime)),
-		color.New(l.color).Sprint(l.tag),
-	)
-	msg += color.New(l.color).Sprintf(" msg=")
-	msg += fmt.Sprint(l.msg)
-	for _, field := range l.fields {
-		msg += color.New(l.color).Sprintf(" %s=", field.Key)
-		msg += fmt.Sprint(field.Value)
-	}
-
-	_, err := fmt.Fprintln(file, msg)
+	_, err := fmt.Fprintln(file, l.ToColoredText())
 	if err != nil {
 		_, _ = fmt.Fprintf(file, "failed to write to log file: %v\n", err)
 	}
