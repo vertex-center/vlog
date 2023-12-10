@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"time"
 )
 
@@ -17,6 +18,7 @@ const (
 
 type Output interface {
 	print(line *Line)
+	printRaw(line string)
 	open() error
 	close() error
 }
@@ -72,7 +74,11 @@ type OutputFile struct {
 }
 
 func (out *OutputFile) print(l *Line) {
-	_, _ = fmt.Fprintln(out.file, l.ToFormat(out.format))
+	out.printRaw(l.ToFormat(out.format))
+}
+
+func (out *OutputFile) printRaw(line string) {
+	_, _ = fmt.Fprintln(out.file, line)
 }
 
 func (out *OutputFile) open() error {
@@ -97,14 +103,18 @@ type OutputStd struct {
 }
 
 func (o OutputStd) print(l *Line) {
+	o.printRaw(l.ToColoredText())
+}
+
+func (o OutputStd) printRaw(line string) {
 	var file *os.File
-	if l.tag == LogTagError {
+	if strings.Contains(line, "ERR") {
 		file = o.stderr
 	} else {
 		file = o.stdout
 	}
 
-	_, _ = fmt.Fprintln(file, l.ToColoredText())
+	_, _ = fmt.Fprintln(file, line)
 }
 
 func (o OutputStd) open() error {
@@ -121,7 +131,11 @@ type OutputFunc struct {
 }
 
 func (o *OutputFunc) print(l *Line) {
-	o.fc(l.ToFormat(o.format))
+	o.printRaw(l.ToFormat(o.format))
+}
+
+func (o *OutputFunc) printRaw(line string) {
+	o.fc(line)
 }
 
 func (o *OutputFunc) open() error {

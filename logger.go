@@ -68,6 +68,12 @@ func (l *Logger) Request(msg string, fields ...KeyValue) {
 	l.print(color.FgGreen, LogTagRequest, msg, fields...)
 }
 
+func (l *Logger) Raw(msg string) {
+	for _, output := range *l.outputs {
+		output.printRaw(msg)
+	}
+}
+
 func (l *Logger) print(color color.Attribute, tag Tag, msg string, fields ...KeyValue) {
 	for _, output := range *l.outputs {
 		output.print(&Line{
