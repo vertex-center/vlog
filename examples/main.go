@@ -9,8 +9,8 @@ import (
 func main() {
 	log := vlog.New(
 		vlog.WithOutputStd(),
-		vlog.WithOutputFile("logs", vlog.LogFormatText),
-		vlog.WithOutputFile("logs", vlog.LogFormatJson),
+		vlog.WithOutputFile(vlog.LogFormatText, "logs"),
+		vlog.WithOutputFile(vlog.LogFormatJson, "logs"),
 	)
 	defer log.Close()
 

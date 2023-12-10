@@ -29,7 +29,7 @@ func WithOutputStd() func(l *Logger) {
 	}
 }
 
-func WithOutputFile(dir string, format LogFormat) func(l *Logger) {
+func WithOutputFile(format LogFormat, dir string) func(l *Logger) {
 	return func(l *Logger) {
 		switch format {
 		case LogFormatText:
