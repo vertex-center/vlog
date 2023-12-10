@@ -11,6 +11,9 @@ func main() {
 		vlog.WithOutputStd(),
 		vlog.WithOutputFile(vlog.LogFormatText, "logs"),
 		vlog.WithOutputFile(vlog.LogFormatJson, "logs"),
+		vlog.WithOutputFunc(vlog.LogFormatJson, func(line string) {
+			println(line)
+		}),
 	)
 	defer log.Close()
 

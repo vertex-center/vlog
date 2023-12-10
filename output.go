@@ -12,6 +12,7 @@ type LogFormat int
 const (
 	LogFormatText = iota
 	LogFormatJson
+	LogFormatColoredText
 )
 
 type Output interface {
@@ -29,37 +30,49 @@ func WithOutputStd() func(l *Logger) {
 	}
 }
 
+func WithOutputFunc(format LogFormat, fc func(line string)) func(l *Logger) {
+	return func(l *Logger) {
+		*l.outputs = append(*l.outputs, &OutputFunc{
+			format: format,
+			fc:     fc,
+		})
+	}
+}
+
 func WithOutputFile(format LogFormat, dir string) func(l *Logger) {
 	return func(l *Logger) {
+		output := &OutputFile{
+			dir:    dir,
+			format: format,
+		}
+
 		switch format {
 		case LogFormatText:
-			output := &OutputTextFile{}
-			output.dir = dir
 			output.ext = ".txt"
-			err := output.open()
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "failed to open log file: %v\n", err)
-				return
-			}
-			*l.outputs = append(*l.outputs, output)
 		case LogFormatJson:
-			output := &OutputJsonFile{}
-			output.dir = dir
 			output.ext = ".jsonl"
-			err := output.open()
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "failed to open log file: %v\n", err)
-				return
-			}
-			*l.outputs = append(*l.outputs, output)
+		default:
+			output.ext = ".txt"
 		}
+
+		err := output.open()
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "failed to open log file: %v\n", err)
+			return
+		}
+		*l.outputs = append(*l.outputs, output)
 	}
 }
 
 type OutputFile struct {
-	dir  string
-	ext  string
-	file *os.File
+	dir    string
+	ext    string
+	format LogFormat
+	file   *os.File
+}
+
+func (out *OutputFile) print(l *Line) {
+	_, _ = fmt.Fprintln(out.file, l.ToFormat(out.format))
 }
 
 func (out *OutputFile) open() error {
@@ -78,34 +91,6 @@ func (out *OutputFile) close() error {
 	return out.file.Close()
 }
 
-type OutputJsonFile struct {
-	OutputFile
-}
-
-func (o *OutputJsonFile) print(l *Line) {
-	j, err := l.ToJson()
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "%v", err)
-		return
-	}
-
-	_, err = fmt.Fprintln(o.file, j)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to write to log file: %v\n", err)
-	}
-}
-
-type OutputTextFile struct {
-	OutputFile
-}
-
-func (o *OutputTextFile) print(l *Line) {
-	_, err := fmt.Fprintln(o.file, l.ToText())
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to write to log file: %v\n", err)
-	}
-}
-
 type OutputStd struct {
 	stdout *os.File
 	stderr *os.File
@@ -119,10 +104,7 @@ func (o OutputStd) print(l *Line) {
 		file = o.stdout
 	}
 
-	_, err := fmt.Fprintln(file, l.ToColoredText())
-	if err != nil {
-		_, _ = fmt.Fprintf(file, "failed to write to log file: %v\n", err)
-	}
+	_, _ = fmt.Fprintln(file, l.ToColoredText())
 }
 
 func (o OutputStd) open() error {
@@ -130,5 +112,22 @@ func (o OutputStd) open() error {
 }
 
 func (o OutputStd) close() error {
+	return nil
+}
+
+type OutputFunc struct {
+	format LogFormat
+	fc     func(line string)
+}
+
+func (o *OutputFunc) print(l *Line) {
+	o.fc(l.ToFormat(o.format))
+}
+
+func (o *OutputFunc) open() error {
+	return nil
+}
+
+func (o *OutputFunc) close() error {
 	return nil
 }

@@ -16,6 +16,20 @@ type Line struct {
 	fields []KeyValue
 }
 
+func (l *Line) ToFormat(format LogFormat) string {
+	switch format {
+	case LogFormatText:
+		return l.ToText()
+	case LogFormatJson:
+		j, _ := l.ToJson()
+		return j
+	case LogFormatColoredText:
+		return l.ToColoredText()
+	default:
+		return l.ToText()
+	}
+}
+
 func (l *Line) ToColoredText() string {
 	msg := fmt.Sprintf("%s %s",
 		color.New(color.FgHiWhite).Sprintf(l.now.Format(time.DateTime)),
