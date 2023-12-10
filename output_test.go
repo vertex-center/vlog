@@ -51,8 +51,10 @@ func TestOutputTextFile(t *testing.T) {
 	defer file.Close()
 	defer os.Remove(file.Name())
 
-	output := &OutputTextFile{}
-	output.file = file
+	output := &OutputFile{
+		file:   file,
+		format: LogFormatText,
+	}
 	output.print(line)
 
 	content, err := os.ReadFile(file.Name())
@@ -68,8 +70,10 @@ func TestOutputJsonFile(t *testing.T) {
 	defer file.Close()
 	defer os.Remove(file.Name())
 
-	output := &OutputJsonFile{}
-	output.file = file
+	output := &OutputFile{
+		file:   file,
+		format: LogFormatJson,
+	}
 	output.print(line)
 
 	content, err := os.ReadFile(file.Name())
